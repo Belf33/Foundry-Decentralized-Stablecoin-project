@@ -351,4 +351,8 @@ contract DSCEngine is ReentrancyGuard {
     {
         (totalDscMinted, collatearlValueInUsd) = _getAccountInformation(user);
     }
+
+    function getCollateralBalanceOfUser(address user, address token) external view returns (uint256) {
+        return s_collateralDeposited[user][token];
+    }
 }
