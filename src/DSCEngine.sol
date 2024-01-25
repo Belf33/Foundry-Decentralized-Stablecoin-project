@@ -168,6 +168,10 @@ contract DSCEngine is ReentrancyGuard {
         redeemCollateral(tokenCollateralAddress, amountCollateral);
     }
 
+    ///////////////////////////////////
+    // Public //
+    //////////////////////////////////
+
     function redeemCollateral(address tokenCollateralAddress, uint256 amountCollateral)
         public
         moreThanZero(amountCollateral)
@@ -222,7 +226,7 @@ contract DSCEngine is ReentrancyGuard {
         if (endingUserHealthFactor <= startingUserHealthFactor) {
             revert DSCEngine__HealthFactorNotImproved();
         }
-        _revertIfHealthFactorIsBroken(msg. sender);
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     function getHealthFactor() external view {}
@@ -268,6 +272,16 @@ contract DSCEngine is ReentrancyGuard {
         return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
     }
 
+    function _calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (totalDscMinted == 0) return type(uint256).max;
+        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        return (collateralAdjustedForThreshold * 1e18) / totalDscMinted;
+    }
+
     function _revertIfHealthFactorIsBroken(address user) internal view {
         // 1. Check health factor (do they have enough collateral?)
         // 2. Revert if they don't
@@ -305,6 +319,14 @@ contract DSCEngine is ReentrancyGuard {
         return totalCollateralValueInUsd;
     }
 
+    function calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        external
+        pure
+        returns (uint256)
+    {
+        return _calculateHealthFactor(totalDscMinted, collateralValueInUsd);
+    }
+
     function getUsdValue(address token, uint256 amount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
         (, int256 price,,,) = priceFeed.latestRoundData();
@@ -318,7 +340,15 @@ contract DSCEngine is ReentrancyGuard {
         return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION);
     }
 
-    function getAccountInformation(address user) external view returns (uint256 totalDscMinted, uint256 collatearlValueInUsd){
-       (totalDscMinted, collatearlValueInUsd) = _getAccountInformation(user);
+    function getCollateralTokens() external view returns (address[] memory) {
+        return s_collatiralTokens;
+    }
+
+    function getAccountInformation(address user)
+        external
+        view
+        returns (uint256 totalDscMinted, uint256 collatearlValueInUsd)
+    {
+        (totalDscMinted, collatearlValueInUsd) = _getAccountInformation(user);
     }
 }
