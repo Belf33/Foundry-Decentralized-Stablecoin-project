@@ -45,7 +45,15 @@ contract InverientsTests is StdInvariant, Test {
 
         uint256 wethValue = dsce.getUsdValue(weth, totalWethDeposited);
         uint256 wbtcValue = dsce.getUsdValue(wbtc, totalWbtcDeposited);
-  
+
         assert(wethValue + wbtcValue >= totalSupply);
+    }
+
+    function invariants_gettersShouldNotRevert() public view {
+        dsce.getAccountCollateralValue(msg.sender);
+        dsce.getAccountInformation(msg.sender);
+        dsce.getCollateralBalanceOfUser(msg.sender, weth);
+        dsce.getCollateralTokens();
+        dsce.getHealthFactor();
     }
 }
